@@ -82,8 +82,11 @@ def main():
         print(str(err), file=sys.stderr)
         sys.exit(errno.EINVAL)
     except Exception as err:
-        import rich.console
-        print_exception()
+        try:
+            import rich.console
+            print_exception()
+        except ImportError:
+            print(err)
         sys.exit(errno.EPERM)
 
     if not create_result:
