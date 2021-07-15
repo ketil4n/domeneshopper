@@ -1,0 +1,3 @@
+domeneshop
+python-dotenv
+rich

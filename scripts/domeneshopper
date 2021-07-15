@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+import domeneshopper.__main__
+
+domeneshopper.__main__.main()
