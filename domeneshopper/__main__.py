@@ -73,7 +73,7 @@ def main():
         print(str(err), file=sys.stderr)
         sys.exit(errno.EREMOTEIO)
     except FileNotFoundError as err:
-        print(f'[red]{str(err)}[/red]', file=sys.stderr)
+        print('[red]{}[/red]'.format(str(err)), file=sys.stderr)
         sys.exit(errno.ENOENT)
     except FileExistsError as err:
         print(str(err), file=sys.stderr)

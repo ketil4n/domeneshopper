@@ -63,24 +63,25 @@ def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
 
     the_client = build_client() if not client else client
 
-    LOG.debug(f'Loading domain {domain_name}')
+    LOG.debug('Loading domain %s', domain_name)
     domains = load_domains(the_client)
 
     main_domain = next((domain for domain in domains if domain['domain'] == domain_name), None)
 
     if not main_domain:
-        raise FileNotFoundError(f'Did not find the domain {domain_name}')
+        raise FileNotFoundError('Did not find the domain {domain_name}'.format(domain_name=domain_name))
 
     records = the_client.get_records(main_domain['id'])
-    LOG.debug(f'Found {len(records)} records for {domain_name}')
+    LOG.debug('Found %s records for %s', len(records), domain_name)
 
     old_record = next((record for record in records if record['host'] == subdomain and record['type']==record_type), None)
 
-    LOG.debug(f'Matching record is {old_record}')
+    LOG.debug('Matching record is %s', old_record)
     if old_record:
-        print(f'Record {subdomain} already exists')
+        print('Record %s already exists', subdomain)
         print(old_record)
-        raise FileExistsError(f'{domain_name} already has the {record_type} record {subdomain} ({old_record["data"]})')
+        raise FileExistsError('{domain_name} already has the {record_type} record {subdomain} ({old_record})'.format(
+            domain_name=domain_name, record_type=record_type, subdomain=subdomain, old_record=old_record['data']))
         return the_client
 
     new_record = {'host': subdomain,
@@ -90,7 +91,7 @@ def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
 
     create_result = client.create_record(main_domain['id'], record=new_record)
 
-    LOG.debug(f'Create returned "{create_result}"')
+    LOG.debug('Create returned "%s"', create_result)
 
     if create_result:
         return True
@@ -116,7 +117,7 @@ def build_client(token=None, secret=None):
     if not secret and 'DOMENESHOP_SECRET' not in os.environ:
         arg_errs.append('DOMENESHOP_SECRET')
     if arg_errs:
-        raise ValueError(f'Cannot continue without credentials. Missing {arg_errs}')
+        raise ValueError('Cannot continue without credentials. Missing {arg_errs}'.format(arg_errs=arg_errs))
 
     the_token = os.environ['DOMENESHOP_TOKEN'] if not token else token
     the_secret = os.environ['DOMENESHOP_SECRET'] if not secret else secret
@@ -128,18 +129,20 @@ def build_client(token=None, secret=None):
 
 def check_arguments(client, domain_name, ip, record_type, subdomain):
     arg_errs = []
-    LOG.debug(f'Checking arguments {domain_name} {subdomain} {ip} {record_type} client set={client is not None}')
+    LOG.debug('Checking arguments %s %s %s %s client set=%s',
+              domain_name, subdomain, ip, record_type, client is not None)
     if not domain_name:
         arg_errs.append('domain_name is empty')
     if not subdomain:
         arg_errs.append('subdomain is empty')
     if not ip or not (is_valid_ipv4_address(ip) or is_valid_ipv6_address(ip)):
-        arg_errs.append(f'{ip} is not a valid ip address')
+        arg_errs.append('{ip} is not a valid ip address'.format(ip=ip))
     elif record_type == 'A' and not is_valid_ipv4_address(ip):
-        arg_errs.append(f'A {ip} is not a valid ipv4 address as required for record type A')
+        arg_errs.append('A {ip} is not a valid ipv4 address as required for record type A'.format(ip=ip))
     elif record_type == 'AAAA' and not is_valid_ipv6_address(ip):
-        arg_errs.append(f'{ip} is not a valid ipv6 address as required for record type AAAA')
+        arg_errs.append('{ip} is not a valid ipv6 address as required for record type AAAA'.format(ip=ip))
     if record_type not in VALID_RECORD_TYPES:
-        arg_errs.append(f'Only {VALID_RECORD_TYPES} are valid for record_type')
+        arg_errs.append('Only {valid_record_types} are valid for record_type'.format(
+            valid_record_types=VALID_RECORD_TYPES))
     return arg_errs
 

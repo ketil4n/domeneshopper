@@ -7,6 +7,6 @@ if __name__ == "__main__":
                      author='Ketil Nordstad',
                      packages=['domeneshopper'],
                      package_data={'': ['*.htpl']},
-                     install_requires=['domeneshop', 'python-dotenv', 'rich'],
+                     install_requires=['domeneshop', 'python-dotenv'],
                      author_email='ketilkn@gmail.com',
                      scripts=['scripts/domeneshopper'])

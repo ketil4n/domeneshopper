@@ -1,3 +1,2 @@
 domeneshop
 python-dotenv
-rich
