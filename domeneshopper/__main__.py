@@ -35,7 +35,7 @@ def build_arguments(secret_help, token_help, usage_help):
     arg_parser.add_argument("--token", type=str, default=None, help=token_help)
     arg_parser.add_argument("--secret", type=str, default=None, help=secret_help)
     arg_parser.add_argument("function", type=str,
-                            choices=['create'], default='create')
+                            choices=['create', 'list'], default='create')
     arg_parser.add_argument("domain", type=str)
     arg_parser.add_argument("ip", nargs='?', default=None, type=str)
     arg_parser.add_argument("type", nargs='?', type=str,
@@ -60,15 +60,15 @@ def main():
 
     arguments = build_arguments(secret_help.format(secret_found=found_secret), token_help.format(token_found=found_token), usage_help)
 
+    result = None
     try:
         client = domeneshopper.dns.build_client(token=arguments.token, secret=arguments.secret)
 
-        domain = '.'.join(arguments.domain.split('.')[1:])
-        subdomain = arguments.domain.split('.')[0]
-
-        LOG.debug('{subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
-
-        create_result = domeneshopper.dns.create_record(domain_name=domain, subdomain=subdomain, ip=arguments.ip, record_type=arguments.type, client=client)
+        if arguments.function == 'create':
+            result = create_domain(arguments, client)
+        else:
+            result = list_domain(arguments, client)
+            print(result)
     except domeneshop.client.DomeneshopError as err:
         print(str(err), file=sys.stderr)
         sys.exit(errno.EREMOTEIO)
@@ -89,10 +89,32 @@ def main():
             raise err
         sys.exit(errno.EPERM)
 
-    if not create_result:
+    if not result:
         sys.exit(errno.EIO)
 
     return client
+
+
+def list_domain(arguments, client):
+    domain = arguments.domain
+    result = domeneshopper.dns.load_domains(client)
+
+    for dom in result:
+        if dom['domain'] != domain:
+            continue
+        records = client.get_records(domain_id=dom['id'])
+        return dom, records
+    raise FileNotFoundError('Did not find domain {}'.format(domain))
+
+
+
+def create_domain(arguments, client):
+    domain = '.'.join(arguments.domain.split('.')[1:])
+    subdomain = arguments.domain.split('.')[0]
+    LOG.debug('{subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
+    create_result = domeneshopper.dns.create_record(domain_name=domain, subdomain=subdomain, ip=arguments.ip,
+                                                    record_type=arguments.type, client=client)
+    return create_result
 
 
 client = None
