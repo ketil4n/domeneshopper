@@ -2,6 +2,7 @@ import argparse
 import errno
 import logging
 import os
+from pprint import pprint as pretty_print
 import sys
 
 import domeneshop
@@ -15,6 +16,8 @@ try:
     from rich import print
     import rich.traceback
     from rich.logging import RichHandler
+
+    pretty_print=rich.print
     print_exception = rich.console.Console().print_exception
     LOG_FORMAT = '%(message)s'
 except ImportError:
@@ -68,7 +71,7 @@ def main():
             result = create_domain(arguments, client)
         else:
             result = list_domain(arguments, client)
-            print(result)
+            pretty_print(result)
     except domeneshop.client.DomeneshopError as err:
         print(str(err), file=sys.stderr)
         sys.exit(errno.EREMOTEIO)
