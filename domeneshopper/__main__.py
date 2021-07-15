@@ -66,7 +66,7 @@ def main():
         domain = '.'.join(arguments.domain.split('.')[1:])
         subdomain = arguments.domain.split('.')[0]
 
-        LOG.debug(f'{subdomain=} {domain=}')
+        LOG.debug('{subdomain} {domain}'.format(subdomain, domain))
 
         create_result = domeneshopper.dns.create_record(domain_name=domain, subdomain=subdomain, ip=arguments.ip, record_type=arguments.type, client=client)
     except domeneshop.client.DomeneshopError as err:
