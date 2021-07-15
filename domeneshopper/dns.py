@@ -10,7 +10,7 @@ import domeneshop
 
 try:
     from dotenv import load_dotenv
-except ModuleNotFoundError:
+except ImportError:
     def load_dotenv():
         LOG.debug('Missing recommended module python-dotenv')
 
@@ -21,7 +21,7 @@ try:
     from rich.logging import RichHandler
     print_exception = rich.console.Console().print_exception
     LOG_FORMAT = '%(message)s'
-except ModuleNotFoundError:
+except ImportError:
     LOG_FORMAT = "[%(levelname)s:%(filename)s:%(lineno)s - %(funcName)20s ] %(message)s"
     RichHandler = logging.StreamHandler
     print_exception = print
