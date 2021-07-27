@@ -2,7 +2,7 @@ import setuptools
 
 if __name__ == "__main__":
     setuptools.setup(name="domeneshopper",
-                     version='0.1',
+                     version='0.2',
                      description='Create new subdomains on domeneshop.no',
                      author='Ketil Nordstad',
                      packages=['domeneshopper'],

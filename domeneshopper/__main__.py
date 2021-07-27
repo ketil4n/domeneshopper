@@ -38,7 +38,7 @@ def build_arguments(secret_help, token_help, usage_help):
     arg_parser.add_argument("--token", type=str, default=None, help=token_help)
     arg_parser.add_argument("--secret", type=str, default=None, help=secret_help)
     arg_parser.add_argument("function", type=str,
-                            choices=['create', 'list'], default='create')
+                            choices=['create', 'delete', 'list'], default='create')
     arg_parser.add_argument("domain", type=str)
     arg_parser.add_argument("ip", nargs='?', default=None, type=str)
     arg_parser.add_argument("type", nargs='?', type=str,
@@ -69,6 +69,8 @@ def main():
 
         if arguments.function == 'create':
             result = create_domain(arguments, client)
+        elif arguments.function == 'delete':
+            result = delete_domain(arguments, client)
         else:
             result = list_domain(arguments, client)
             pretty_print(result)
@@ -109,6 +111,14 @@ def list_domain(arguments, client):
         return dom, records
     raise FileNotFoundError('Did not find domain {}'.format(domain))
 
+
+def delete_domain(arguments, client):
+    domain = '.'.join(arguments.domain.split('.')[1:])
+    subdomain = arguments.domain.split('.')[0]
+    LOG.debug('{subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
+    create_result = domeneshopper.dns.delete_record(domain_name=domain, subdomain=subdomain, ip=arguments.ip,
+                                                    record_type=arguments.type, client=client)
+    return create_result
 
 
 def create_domain(arguments, client):

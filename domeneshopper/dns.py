@@ -2,7 +2,9 @@ import argparse
 import errno
 import logging
 import os
+import pprint
 import socket
+import sys
 
 import domeneshop
 
@@ -52,6 +54,54 @@ def is_valid_ipv6_address(address):
     except socket.error:  # not a valid address
         return False
     return True
+
+
+def delete_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', client=None):
+    arg_errs = check_arguments(client, domain_name, ip, record_type, subdomain)
+
+    if arg_errs:
+        raise ValueError('. '.join(arg_errs))
+
+    the_client = build_client() if not client else client
+
+    LOG.debug('Loading domain %s', domain_name)
+    domains = load_domains(the_client)
+
+    main_domain = next((domain for domain in domains if domain['domain'] == domain_name), None)
+
+    if not main_domain:
+        raise FileNotFoundError('Did not find the domain {domain_name}'.format(domain_name=domain_name))
+
+    records = the_client.get_records(main_domain['id'])
+    LOG.debug('Found %s records for %s', len(records), domain_name)
+
+    old_record = next((record for record in records if record['host'] == subdomain and record['type']==record_type), None)
+
+    LOG.debug('Matching record is %s', old_record)
+    if not old_record or old_record['data'] != ip:
+        error_msg = '{domain_name} has no {record_type} record {subdomain} {ip} ({old_record})'.format(
+            domain_name=domain_name,
+            record_type=record_type,
+            subdomain=subdomain,
+            ip=ip,
+            old_record='is '+ old_record['data'] if old_record and 'data' in old_record else '')
+
+        LOG.error(error_msg)
+        LOG.debug(old_record)
+        raise FileNotFoundError(error_msg)
+        return the_client
+
+    domain_id = main_domain['id']
+    record_id = old_record['id']
+
+    try:
+        delete_result = client.delete_record(domain_id=domain_id, record_id=record_id)
+        LOG.debug('Delete returned "%s" (Will normally return None for some reason)', delete_result)
+        return True
+    except domeneshop.client.DomeneshopError as ex:
+        LOG.error('Delete operation raised DomeneshopError.')
+        return False
+    return False
 
 
 def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', client=None):
