@@ -105,7 +105,6 @@ def delete_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
 
 
 def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', client=None):
-    # Use a breakpoint in the code line below to debug your script.
     arg_errs = check_arguments(client, domain_name, ip, record_type, subdomain)
 
     if arg_errs:
@@ -127,12 +126,11 @@ def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
     old_record = next((record for record in records if record['host'] == subdomain and record['type']==record_type), None)
 
     LOG.debug('Matching record is %s', old_record)
-    if old_record:
-        print('Record %s already exists', subdomain)
-        print(old_record)
+    if old_record and old_record['data'] != ip:
+        LOG.debug('Record {} already exists with ip {}'.format(subdomain, old_record.get('data')))
+        LOG.debug(old_record)
         raise FileExistsError('{domain_name} already has the {record_type} record {subdomain} ({old_record})'.format(
             domain_name=domain_name, record_type=record_type, subdomain=subdomain, old_record=old_record['data']))
-        return the_client
 
     new_record = {'host': subdomain,
                   'ttl': 3600,
