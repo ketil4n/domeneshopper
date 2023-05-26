@@ -149,7 +149,9 @@ def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
     old_record = next((record for record in records if record['host'] == subdomain and record['type']==record_type), None)
 
     LOG.debug('Matching record is %s', old_record)
-    if old_record and old_record['data'] != ip:
+    if old_record:
+        if old_record['data'] == ip:
+            return True
         LOG.debug('Record {} already exists with ip {}'.format(subdomain, old_record.get('data')))
         LOG.debug(old_record)
         raise FileExistsError('{domain_name} already has the {record_type} record {subdomain} ({old_record})'.format(
