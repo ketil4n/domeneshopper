@@ -38,7 +38,7 @@ def build_arguments(secret_help, token_help, usage_help):
     arg_parser.add_argument("--token", type=str, default=None, help=token_help)
     arg_parser.add_argument("--secret", type=str, default=None, help=secret_help)
     arg_parser.add_argument("function", type=str,
-                            choices=['create', 'delete', 'list'], default='create')
+                            choices=['verify', 'create', 'delete', 'list'], default='create')
     arg_parser.add_argument("domain", type=str)
     arg_parser.add_argument("ip", nargs='?', default=None, type=str)
     arg_parser.add_argument("type", nargs='?', type=str,
@@ -67,7 +67,9 @@ def main():
     try:
         client = domeneshopper.dns.build_client(token=arguments.token, secret=arguments.secret)
 
-        if arguments.function == 'create':
+        if arguments.function == 'verify':
+            result = verify_domain(arguments, client)
+        elif arguments.function == 'create':
             result = create_domain(arguments, client)
         elif arguments.function == 'delete':
             result = delete_domain(arguments, client)
@@ -124,10 +126,27 @@ def delete_domain(arguments, client):
 def create_domain(arguments, client):
     domain = '.'.join(arguments.domain.split('.')[1:])
     subdomain = arguments.domain.split('.')[0]
-    LOG.debug('{subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
+    LOG.debug('Create {subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
     create_result = domeneshopper.dns.create_record(domain_name=domain, subdomain=subdomain, ip=arguments.ip,
                                                     record_type=arguments.type, client=client)
     return create_result
+
+
+def verify_domain(arguments, client):
+    domain = '.'.join(arguments.domain.split('.')[1:])
+    subdomain = arguments.domain.split('.')[0]
+    record_type = arguments.type
+    ip_address = arguments.ip
+    LOG.debug('Verify {subdomain} {domain}'.format(subdomain=subdomain, domain=domain))
+    result = domeneshopper.dns.lookup_record(subdomain=subdomain,
+                                             domain_name=domain,
+                                             record_type=record_type,
+                                             ip=ip_address)
+    if not result:
+        raise KeyError(f'Did not find the domain {subdomain}.{domain} where record type is {record_type}')
+    if result.get('data', 'no data in result') != ip_address:
+        raise ValueError(f'{subdomain}.{domain} {record_type} exists but its IP {result.get("data","")} is not {ip_address}')
+    return result
 
 
 client = None

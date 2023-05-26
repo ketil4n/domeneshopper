@@ -104,6 +104,29 @@ def delete_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', 
     return False
 
 
+def lookup_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', client=None):
+    arg_errs = check_arguments(client, domain_name, ip, record_type, subdomain)
+
+    if arg_errs:
+        raise ValueError('. '.join(arg_errs))
+
+    the_client = build_client() if not client else client
+
+    LOG.debug('Loading domain %s', domain_name)
+    domains = load_domains(the_client)
+
+    main_domain = next((domain for domain in domains if domain['domain'] == domain_name), None)
+
+    if not main_domain:
+        raise FileNotFoundError('Did not find the domain {domain_name}'.format(domain_name=domain_name))
+
+    records = the_client.get_records(main_domain['id'])
+
+    record = next((record for record in records if record['host'] == subdomain and record['type'] == record_type), None)
+
+    return record
+
+
 def create_record(domain_name, subdomain='www', ip='10.0.0.1', record_type='A', client=None):
     arg_errs = check_arguments(client, domain_name, ip, record_type, subdomain)
 
